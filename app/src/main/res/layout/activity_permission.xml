@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:src="@drawable/location"
+        android:layout_marginTop="100dp"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Rv needs your location permission and GPS to work accurately \n
+Please grant permission to access your location"
+        android:gravity="center"
+        android:layout_gravity="center"/>
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+    <Button
+        android:id="@+id/permBTN"
+        android:layout_width="300dp"
+        android:layout_gravity="center"
+        android:layout_marginBottom="20dp"
+        android:layout_height="wrap_content"
+        android:text="Allow"
+        android:background="@drawable/shape_rectangle"
+        android:textColor="#FFFFFF"
+        />
+
+
+</LinearLayout>
