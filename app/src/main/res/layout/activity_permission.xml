@@ -7,13 +7,14 @@
         android:layout_width="match_parent"
         android:layout_height="400dp"
         android:src="@drawable/location"
-        android:layout_marginTop="100dp"/>
+        android:layout_marginTop="20dp"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Rv needs your location permission and GPS to work accurately \n
 Please grant permission to access your location"
         android:gravity="center"
+        android:layout_marginTop="20dp"
         android:layout_gravity="center"/>
     <View
         android:layout_width="0dp"
