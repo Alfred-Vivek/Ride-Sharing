@@ -68,7 +68,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onPlaceSelected(Place place) {
                 // TODO: Get info about the selected place.
-                Log.i("Error", "Place: " + place.getName() + ", " + place.getLatLng());
+                Log.i("Error", "Place: " + place.getName() + ", " + place.getLatLng()+", "+place.getId());
             }
             @Override
             public void onError(Status status) {
