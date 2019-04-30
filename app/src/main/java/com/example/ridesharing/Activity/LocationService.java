@@ -98,6 +98,7 @@ public class LocationService extends AppCompatActivity{
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
+                mCurrentLocation = locationResult.getLastLocation();
             }
         };
     }

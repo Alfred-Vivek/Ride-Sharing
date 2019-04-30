@@ -1,6 +1,7 @@
 package com.example.ridesharing.Activity;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -13,14 +14,14 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.ridesharing.R;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -30,29 +31,25 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
+
+import java.util.Arrays;
 
 public class MapsActivity_bck extends AppCompatActivity implements OnMapReadyCallback,GoogleMap.OnMapLongClickListener {
     private GoogleMap mMap;
     private View mMapView;
     TextView miniTV, sedanTV, suvTV, primeTV;
     Marker my;
-    private FusedLocationProviderClient mFusedLocationClient;
-//    private LocationCallback mLocationCallback;
-//    boolean mRequestingLocationUpdates;
-//    private static final int REQUEST_CHECK_SETTINGS = 0x1;
-//    private static final long UPDATE_INTERVAL_IN_MILLISECONDS = 10000;
-//    private static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 2;
-    private SettingsClient mSettingsClient;
-//    LocationRequest mLocationRequest;
-//    private Location mCurrentLocation;
-//    private LocationSettingsRequest mLocationSettingsRequest;
     LocationService ls;
+    public static final int REQUEST_CHECK_SETTINGS = 0x1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        mSettingsClient = LocationServices.getSettingsClient(this);
+        setContentView(R.layout.content_maps);
         ls = new LocationService(this);
         ls.createLocationCallback();
         ls.createLocationRequest();
@@ -62,10 +59,37 @@ public class MapsActivity_bck extends AppCompatActivity implements OnMapReadyCal
         suvTV = findViewById(R.id.suvTV);
         primeTV = findViewById(R.id.primeTV);
         setListeners();
-//        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-//        mMapView = mapFragment.getView();
-//        mapFragment.getMapAsync(this);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        mMapView = mapFragment.getView();
+        mapFragment.getMapAsync(this);
         registerReceiver(mGpsSwitchStateReceiver, new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION));
+        Places.initialize(this,getString(R.string.google_maps_key));
+        PlacesClient placesClient = Places.createClient(this);
+        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
+                getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+                autocompleteFragment.setHint("Search your location");
+                autocompleteFragment.setCountry("IN");
+        ImageView searchIcon = (ImageView)((LinearLayout)autocompleteFragment.getView()).getChildAt(0);
+        searchIcon.setImageDrawable(getResources().getDrawable(R.drawable.ic_edit_location));
+        searchIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(MapsActivity_bck.this, "YOUR DESIRED BEHAVIOUR HERE", Toast.LENGTH_SHORT).show();
+            }
+        });
+        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME,Place.Field.LAT_LNG));
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                // TODO: Get info about the selected place.
+                Log.i("Error", "Place: " + place.getName() + ", " + place.getLatLng()+", "+place.getId());
+            }
+            @Override
+            public void onError(Status status) {
+                // TODO: Handle the error.
+                Log.i("Error", "An error occurred: " + status);
+            }
+        });
     }
     private void setListeners() {
         miniTV.setOnClickListener(new View.OnClickListener() {
@@ -189,86 +213,6 @@ public class MapsActivity_bck extends AppCompatActivity implements OnMapReadyCal
         my = mMap.addMarker(new MarkerOptions().position(latLng).title(latLng.toString()));
         my.showInfoWindow();
     }
-//    private void buildLocationSettingsRequest() {
-//        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-//        builder.addLocationRequest(mLocationRequest);
-//        mLocationSettingsRequest = builder.build();
-//    }
-//    private void startLocationUpdates() {
-//        mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
-//                .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
-//                    @Override
-//                    public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-//                        Log.i("Res", "All location settings are satisfied.");
-//                        if (ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MapsActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//                            return;
-//                        }
-//                        mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, Looper.myLooper());
-//                    }
-//                })
-//                .addOnFailureListener(this, new OnFailureListener() {
-//                    @Override
-//                    public void onFailure(@NonNull Exception e) {
-//                        int statusCode = ((ApiException) e).getStatusCode();
-//                        switch (statusCode) {
-//                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-//                                Log.i("Res", "Location settings are not satisfied. Attempting to upgrade " +
-//                                        "location settings ");
-//                                try {
-//                                    ResolvableApiException rae = (ResolvableApiException) e;
-//                                    rae.startResolutionForResult(MapsActivity.this, REQUEST_CHECK_SETTINGS);
-//                                } catch (IntentSender.SendIntentException sie) {
-//                                    Log.i("Res", "PendingIntent unable to execute request.");
-//                                }
-//                                break;
-//                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-//                                String errorMessage = "Location settings are inadequate, and cannot be " +
-//                                        "fixed here. Fix in Settings.";
-//                                Log.e("Res", errorMessage);
-//                                Toast.makeText(MapsActivity.this, errorMessage, Toast.LENGTH_LONG).show();
-//                                mRequestingLocationUpdates = false;
-//                        }
-//                    }
-//                });
-//    }
-//    private void createLocationRequest() {
-//        mLocationRequest = new LocationRequest();
-//        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
-//        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
-//        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-//    }
-//    private void createLocationCallback() {
-//        mLocationCallback = new LocationCallback() {
-//            @Override
-//            public void onLocationResult(LocationResult locationResult) {
-//                super.onLocationResult(locationResult);
-//            }
-//        };
-//    }
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        switch (requestCode) {
-//// Check for the integer request code originally supplied to startResolutionForResult().
-//            case REQUEST_CHECK_SETTINGS:
-//                switch (resultCode) {
-//                    case Activity.RESULT_OK:
-//                        Log.i("TAG", "User agreed to make required location settings changes.");
-//                        startLocationUpdates();
-//                        break;
-//                    case Activity.RESULT_CANCELED:
-//                        Log.i("TAG", "User chose not to make required location settings changes.");
-//                        Intent in = new Intent(this,SetPermission.class);
-//                        in.putExtra("message","Turn On GPS");
-//                        startActivity(in);
-//
-//// mRequestingLocationUpdates = false;
-//// updateUI();
-//                        break;
-//                }
-//                break;
-//        }
-//    }
     private BroadcastReceiver mGpsSwitchStateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -278,4 +222,23 @@ public class MapsActivity_bck extends AppCompatActivity implements OnMapReadyCal
             }
         }
     };
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case REQUEST_CHECK_SETTINGS:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        Log.i("TAG", "User agreed to make required location settings changes.");
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        Log.i("TAG", "User chose not to make required location settings changes.");
+                        Intent gps = new Intent(this,SetPermission.class);
+                        gps.putExtra("message","Turn On GPS");
+                        startActivity(gps);
+                        break;
+                }
+                break;
+        }
+    }
 }
