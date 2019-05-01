@@ -32,7 +32,7 @@ public class HomePage extends AppCompatActivity
     private Button mFromDate,mToDate,mShowCars;
     private int mDay,mMonth,mYear,mHour,mMinute;
     public String fromDate="",fromTime="",toDate="",toTime="";
-    private TextView fromDateTv,toDateTv,mTextView,muserName;
+    private TextView fromDateTv,toDateTv,muserEmail,muserName;
     private ImageView mFromImageView,mToImageView;
     private View navHeader;
     public boolean flag;
@@ -40,32 +40,21 @@ public class HomePage extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
-//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
         mFromDate = (Button) findViewById(R.id.from_date_btn);
         mToDate = (Button) findViewById(R.id.to_date_btn);
         mShowCars = (Button) findViewById(R.id.show_cars_btn);
         mFromDate.setOnClickListener(this);
         mToDate.setOnClickListener(this);
         mShowCars.setOnClickListener(this);
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-//        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-//                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-//        drawer.addDrawerListener(toggle);
-//        toggle.syncState();
-
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
         navHeader = navigationView.getHeaderView(0);
         muserName = (TextView) navHeader.findViewById(R.id.usr_name);
-        mTextView = (TextView) navHeader.findViewById(R.id.textView);
-
+        muserEmail = (TextView) navHeader.findViewById(R.id.usr_email);
         muserName.setText(PrefUtils.getFromPrefs(this,PrefUtils.user_name,""));
-        mTextView.setText(PrefUtils.getFromPrefs(this,PrefUtils.user_email,""));
+        muserEmail.setText(PrefUtils.getFromPrefs(this,PrefUtils.user_email,""));
     }
-
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

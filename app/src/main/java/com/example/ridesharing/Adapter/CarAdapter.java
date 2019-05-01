@@ -12,7 +12,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.ridesharing.Activity.ShowCars;
 import com.example.ridesharing.Activity.YourTrips;
@@ -38,21 +37,18 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ImageViewHolder>
     private List<Car> cars_list;
     public String from,to,vin;
     ApiInterface apiServices;
-    //private OnItemClickListener mListener;
     public CarAdapter(Context context,String from,String to,List<Car> cars_list){
         this.mContext = context;
         this.from = from;
         this.to = to;
         this.cars_list = cars_list;
     }
-
     @NonNull
     @Override
     public ImageViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        View v = LayoutInflater.from(mContext).inflate(R.layout.car_item,viewGroup,false);// Inflator points towards the XML layout
+        View v = LayoutInflater.from(mContext).inflate(R.layout.showcar_card,viewGroup,false);// Inflator points towards the XML layout
         return new ImageViewHolder(v);
     }
-
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder imageViewHolder, int i) {
         final Car car_list = cars_list.get(i);
@@ -65,15 +61,25 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ImageViewHolder>
         imageViewHolder.mBook_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                apiCall();
+                new AlertDialog.Builder(mContext)
+                        .setTitle("Confirm Booking!")
+                        .setMessage("Do you want to book this car?")
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                callBookingApi();
+                            }
+                        })
+                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {}
+                        }).show();
             }
         });
     }
-
-    private void apiCall() {
+    private void callBookingApi() {
         String user_name = PrefUtils.getFromPrefs(mContext,PrefUtils.user_email,"");
         final String mcaddress = PrefUtils.getFromPrefs(mContext,PrefUtils.mc_address,"");
-        Log.d("adapter",user_name+":"+from+":"+to +"VIN : "+vin);
         BookRequest bookRequest = new BookRequest();
         bookRequest.setVin(vin);
         bookRequest.setFrom(from);
@@ -89,7 +95,6 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ImageViewHolder>
         call.enqueue(new Callback<BookResponse>() {
             @Override
             public void onResponse(Call<BookResponse> call, Response<BookResponse> response) {
-                Log.d("Booked",response.body().getMessage());
                 if(response.body().getStatus().equalsIgnoreCase("fail"))
                 {
                     new AlertDialog.Builder(mContext)
@@ -101,7 +106,7 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ImageViewHolder>
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     if(mContext instanceof ShowCars)
                                     {
-                                        ((ShowCars) mContext).callCarApi();
+                                        ((ShowCars) mContext).loadCarApi();
                                     }
                                 }
                             }).show();
@@ -121,22 +126,28 @@ public class CarAdapter extends RecyclerView.Adapter<CarAdapter.ImageViewHolder>
                                 }
                             }).show();
                 }
-
             }
-
             @Override
             public void onFailure(Call<BookResponse> call, Throwable t) {
-                Log.d("Failed", "Fail");
+                new AlertDialog.Builder(mContext)
+                        .setTitle("Failed to book!")
+                        .setMessage("Try connecting to server again?")
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setPositiveButton("Try Again", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                callBookingApi();
+                            }
+                        })
+                        .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton) {}
+                        }).show();
             }
         });
-
     }
-
     @Override
     public int getItemCount() {
         return cars_list.size();
     }
-
     public class ImageViewHolder extends RecyclerView.ViewHolder {
 
         public TextView title,price,No_seat,Vid,price100;

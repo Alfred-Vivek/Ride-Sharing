@@ -33,8 +33,6 @@ public class QRReader extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.qr_viewer);
-       // ActionBar actionBar = getSupportActionBar();
-
         qr_viewer_text          =       (TextView)findViewById(R.id.qr_viewer_text);
         qrIMGV                  =       (ImageView)findViewById(R.id.qrIMGV);
 
@@ -43,10 +41,8 @@ public class QRReader extends AppCompatActivity {
             public void onClick(View v) {
                 IntentIntegrator integrator = new IntentIntegrator(QRReader.this);
                 integrator.setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES);
-                //integrator.setPrompt("Scan a barcode");
-                integrator.setCameraId(0);  // Use a specific camera of the device
+                integrator.setCameraId(0);
                 integrator.setBeepEnabled(true);
-                //integrator.setBarcodeImageEnabled(true);
                 integrator.initiateScan();
             }
         });

@@ -7,12 +7,14 @@
     android:layout_marginRight="10dp"
     android:layout_marginLeft="10dp">
     <LinearLayout
-        android:orientation="horizontal" android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
         android:weightSum="3"
         android:layout_height="wrap_content">
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:orientation="vertical">
             <ImageView
                 android:id="@+id/car_image"
@@ -34,7 +36,8 @@
                 android:padding="5dp"
                 android:textSize="17sp"
                 android:layout_marginEnd="8dp"
-                android:text="qadassadad"
+                android:text="Trip Id"
+                android:textStyle="bold"
                 android:textColor="#000000"/>
             <TextView
                 android:id="@+id/vin"
@@ -52,8 +55,7 @@
                 android:padding="5dp"
                 android:textSize="14sp"
                 android:layout_marginEnd="8dp"
-                android:text="adadadad"
-                android:textColor="#000000"/>
+                android:text="adadadad"/>
             <TextView
                 android:id="@+id/to"
                 android:layout_width="match_parent"
@@ -61,27 +63,52 @@
                 android:padding="5dp"
                 android:textSize="14sp"
                 android:layout_marginEnd="8dp"
-                android:text="adadadad"
-                android:textColor="#000000"/>
-            <Button
-                android:id="@+id/startTrip_btn"
-                android:text="Start Trip"
-                android:padding="5dp"
-                android:layout_gravity="end"
-                android:textColor="#FFFFFF"
-                android:background="@color/colorPrimary"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:text="adadadad"/>
+            <View
+                android:id="@+id/divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#cfcfcf"
+                android:layout_marginRight="10dp"
+                android:layout_marginLeft="10dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_marginTop="10dp">
+                <Button
+                    android:id="@+id/startTrip_btn"
+                    android:text="Start  Trip"
+                    android:padding="5dp"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/button_rounded_green"
+                    android:layout_width="100dp"
+                    android:layout_height="40dp" />
+                <Button
+                    android:id="@+id/cancelTrip_btn"
+                    android:text="Cancel Trip"
+                    android:layout_marginLeft="20dp"
+                    android:padding="5dp"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/button_rounded_red"
+                    android:layout_width="100dp"
+                    android:layout_height="40dp" />
+            </LinearLayout>
             <Button
                 android:id="@+id/endTrip_btn"
-                android:layout_gravity="end"
-                android:text="EndTrip"
+                android:text="End Trip"
+                android:layout_marginBottom="10dp"
+                android:layout_gravity="center"
+                android:padding="5dp"
                 android:textColor="#FFFFFF"
-                android:background="@color/colorPrimary"
+                android:background="@drawable/button_rounded_red"
                 android:visibility="gone"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_width="200dp"
+                android:layout_height="40dp" />
         </LinearLayout>
-
     </LinearLayout>
 </android.support.v7.widget.CardView>

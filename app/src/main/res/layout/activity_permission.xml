@@ -27,7 +27,7 @@ Please grant permission to access your location"
         android:layout_marginBottom="20dp"
         android:layout_height="wrap_content"
         android:text="Allow"
-        android:background="@drawable/shape_rectangle"
+        android:background="@drawable/button_rounded_blue"
         android:textColor="#FFFFFF"
         />
 

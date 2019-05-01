@@ -1,5 +1,4 @@
 package com.example.ridesharing.Activity;
-
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.annotation.Nullable;
@@ -18,36 +17,37 @@ import com.example.ridesharing.Rest.ApiInterface;
 import com.example.ridesharing.Utils.PrefUtils;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
-import com.journeyapps.barcodescanner.CaptureActivity;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class SingleTrip extends AppCompatActivity {
-
+public class CurrentTrip extends AppCompatActivity {
     private TextView mcartitle_tv;
     private Button mUnlock_btn;
     private Button mScan_btn;
     ApiInterface apiInterface;
+    String tripId;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_single_trip);
-
+        setContentView(R.layout.activity_current_trip);
+        Bundle intent = getIntent().getExtras();
+        if(intent !=null)
+        {
+            tripId = intent.getString("tripId");
+        }
         mcartitle_tv = (TextView) findViewById(R.id.carName);
         mScan_btn  = (Button) findViewById(R.id.scan);
         mUnlock_btn = (Button) findViewById(R.id.unlock);
         mScan_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                IntentIntegrator integrator = new IntentIntegrator(SingleTrip.this);
+                IntentIntegrator integrator = new IntentIntegrator(CurrentTrip.this);
                 integrator.setDesiredBarcodeFormats(IntentIntegrator.ALL_CODE_TYPES);
-                //integrator.setPrompt("Scan a barcode");
-                integrator.setCameraId(0);  // Use a specific camera of the device
+                integrator.setCameraId(0);
                 integrator.setBeepEnabled(true);
                 integrator.setCaptureActivity(CaptureActivityPortrait.class);
-                //integrator.setBarcodeImageEnabled(true);
                 integrator.initiateScan();
             }
         });
@@ -59,30 +59,23 @@ public class SingleTrip extends AppCompatActivity {
                     sendToServer(mcAddress,encKey);
             }
         });
-
-        Bundle mbundle = getIntent().getExtras();
-        if (mbundle!=null){
-            String string =mbundle.getString("title");
-        }
     }
-
     private void sendToServer(final String mcAddress, final String encKey)
     {
         apiInterface = ApiClient.getClient().create(ApiInterface.class);
-        Log.d("reached",mcAddress+"------"+encKey);
-        Call<UnlockResponse> call = apiInterface.unlockCar(mcAddress,encKey);
+        Call<UnlockResponse> call = apiInterface.unlockCar(tripId,mcAddress,encKey);
         call.enqueue(new Callback<UnlockResponse>() {
             @Override
             public void onResponse(Call<UnlockResponse> call, Response<UnlockResponse> response) {
                 Log.d("unlock",response.body().getStatus());
-                new AlertDialog.Builder(SingleTrip.this)
+                new AlertDialog.Builder(CurrentTrip.this)
                         .setTitle("Booking Details")
                         .setMessage(response.body().getUnlockData().getMessage())
                         .setIcon(android.R.drawable.ic_dialog_alert)
                         .setNeutralButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                Intent in = new Intent(SingleTrip.this,HomePage.class);
+                                Intent in = new Intent(CurrentTrip.this,YourTrips.class);
                                 startActivity(in);
                             }
                         }).show();
@@ -90,7 +83,7 @@ public class SingleTrip extends AppCompatActivity {
             @Override
             public void onFailure(Call<UnlockResponse> call, Throwable t) {
                 Log.d("fail","Unlock Failed");
-                /*new AlertDialog.Builder(SingleTrip.this)
+                new AlertDialog.Builder(CurrentTrip.this)
                         .setTitle("Booking Details")
                         .setMessage("Unable to Connect Server")
                         .setIcon(android.R.drawable.ic_dialog_alert)
@@ -99,24 +92,20 @@ public class SingleTrip extends AppCompatActivity {
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 sendToServer(mcAddress,encKey);
                             }
-                        }).show();*/
+                        }).show();
             }
         });
     }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
         if(result != null) {
             if(result.getContents() == null) {
-                Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show();
             } else {
-                Toast.makeText(this, "Scan Success"/* + result.getContents()*/, Toast.LENGTH_LONG).show();
                 mcartitle_tv.setText("");
                 mcartitle_tv.setText(result.getContents());
                 mScan_btn.setVisibility(View.GONE);
                 mUnlock_btn.setVisibility(View.VISIBLE);
-
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data);

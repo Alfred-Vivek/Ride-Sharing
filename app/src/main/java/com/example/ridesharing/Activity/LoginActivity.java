@@ -3,6 +3,7 @@ import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -36,6 +37,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     private Button mLogin;
     ProgressDialog progressDialog;
     private ApiInterface apiServices;
+    LocationService lsr;
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,15 +50,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Loading...");
         progressDialog.setCancelable(false);
-    }
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.d("util", PrefUtils.getFromPrefs(getApplicationContext(), PrefUtils.user_name, ""));
-        if (!PrefUtils.getFromPrefs(getApplicationContext(), PrefUtils.user_name, "").equalsIgnoreCase("")) {
-            Intent intent = new Intent(LoginActivity.this, HomePage.class);
-            startActivity(intent);
-        }
+        lsr = new LocationService(this);
     }
     @Override
     public void onClick(View view) {
@@ -75,55 +69,56 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         }
     }
     private void signIn() {
-        if (username.equalsIgnoreCase("a"))
-            processDetails();
-//        progressDialog.show();
-//        apiServices = ApiClient.getClient().create(ApiInterface.class);
-//        Call<LoginResponse> call = apiServices.sendLoginDetails(username,password);
-//        call.enqueue(new Callback<LoginResponse>() {
-//            @Override
-//            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
-//                progressDialog.dismiss();
-//                if(response.code() == 200){
-//                    if(response.body().getStatus().equalsIgnoreCase("success")){ ;
-//                        LoginResponse loginResponse = response.body();
-//                        processDetails(loginResponse);
-//                    }else{
-//                        invalidDialog();
-//                    }
-//                }else if(response.code() == 400){
-//                    invalidDialog();
-//                }
-//            }
-//            @Override
-//            public void onFailure(Call<LoginResponse> call, Throwable t) {
-//                progressDialog.dismiss();
-//                new AlertDialog.Builder(LoginActivity.this)
-//                        .setTitle("Failed to connect!")
-//                        .setMessage("Try connecting to server again?")
-//                        .setIcon(android.R.drawable.ic_dialog_alert)
-//                        .setPositiveButton("Try Again", new DialogInterface.OnClickListener() {
-//
-//                            public void onClick(DialogInterface dialog, int whichButton) {
-//                                signIn();
-//                            }
-//                        })
-//                        .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
-//
-//                            public void onClick(DialogInterface dialog, int whichButton) {
-//                                finishAffinity();
-//                            }
-//                        }).show();
-//            }
-//        });
+//        if (username.equalsIgnoreCase("a"))
+//            processDetails();
+        progressDialog.show();
+        apiServices = ApiClient.getClient().create(ApiInterface.class);
+        Call<LoginResponse> call = apiServices.sendLoginDetails(username,password);
+        call.enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                progressDialog.dismiss();
+                if(response.code() == 200){
+                    if(response.body().getStatus().equalsIgnoreCase("success")){ ;
+                        LoginResponse loginResponse = response.body();
+                        processDetails(loginResponse);
+                    }else{
+                        invalidDialog();
+                    }
+                }else if(response.code() == 400){
+                    invalidDialog();
+                }
+            }
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                progressDialog.dismiss();
+                new AlertDialog.Builder(LoginActivity.this)
+                        .setTitle("Failed to connect!")
+                        .setMessage("Try connecting to server again?")
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setPositiveButton("Try Again", new DialogInterface.OnClickListener() {
+
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                signIn();
+                            }
+                        })
+                        .setNegativeButton("Exit", new DialogInterface.OnClickListener() {
+
+                            public void onClick(DialogInterface dialog, int whichButton) {
+                                finishAffinity();
+                            }
+                        }).show();
+            }
+        });
     }
-    //    public void processDetails(LoginResponse lr)
-    public void processDetails() {
-//        progressDialog.show();
-//        PrefUtils.saveToPrefs(getApplicationContext(),PrefUtils.user_name,lr.getLoginData().getName());
-//        PrefUtils.saveToPrefs(getApplicationContext(),PrefUtils.user_email,lr.getLoginData().getEmail());
-//        PrefUtils.saveToPrefs(getApplicationContext(),PrefUtils.mc_address,lr.getLoginData().getMcaddress());
+    public void processDetails(LoginResponse lr)
+    {
+        progressDialog.show();
+        PrefUtils.saveToPrefs(getApplicationContext(),PrefUtils.user_name,lr.getLoginData().getName());
+        PrefUtils.saveToPrefs(getApplicationContext(),PrefUtils.user_email,lr.getLoginData().getEmail());
+        PrefUtils.saveToPrefs(getApplicationContext(),PrefUtils.mc_address,lr.getLoginData().getMcaddress());
         if (checkPermissions()) {
+            progressDialog.dismiss();
             Intent intent = new Intent(LoginActivity.this,MapsActivity.class);
             startActivity(intent);
         } else if (!checkPermissions()) {
@@ -143,6 +138,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         return permissionState == PackageManager.PERMISSION_GRANTED;
     }
     private void requestPermissions() {
+        progressDialog.dismiss();
         boolean shouldProvideRationale = ActivityCompat.shouldShowRequestPermissionRationale(this,
                 Manifest.permission.ACCESS_FINE_LOCATION);
         if (shouldProvideRationale) {

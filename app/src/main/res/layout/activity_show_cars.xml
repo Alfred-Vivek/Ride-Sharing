@@ -4,20 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#5CE9E7E7"
     tools:context=".Activity.ShowCars">
-
     <!--<ProgressBar-->
         <!--android:id="@+id/progressbar_car_display"-->
         <!--android:layout_width="wrap_content"-->
         <!--android:layout_height="wrap_content"-->
         <!--android:layout_centerInParent="true"/>-->
-
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycleView_cars"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
     </android.support.v7.widget.RecyclerView>
-
-
 </RelativeLayout>

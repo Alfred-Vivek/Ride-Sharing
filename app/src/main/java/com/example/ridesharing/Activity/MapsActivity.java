@@ -9,8 +9,10 @@ import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
@@ -26,6 +28,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.example.ridesharing.R;
+import com.example.ridesharing.Utils.PrefUtils;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -57,14 +60,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,GoogleMap.OnMapLongClickListener, NavigationView.OnNavigationItemSelectedListener {
     private GoogleMap mMap;
     private View mMapView;
-    TextView miniTV, sedanTV, suvTV, primeTV;
+    TextView miniTV, sedanTV, suvTV, primeTV, dpTV,muserEmail,muserName,logout;
     Marker my;
+    ImageView navigation;
     LocationService ls;
+    private View navHeader;
+    FloatingActionButton fab;
     ArrayList<LatLng> markerPoints;
+    PolylineOptions lineOptions;
     public static final int REQUEST_CHECK_SETTINGS = 0x1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,10 +84,27 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         sedanTV = findViewById(R.id.sedanTV);
         suvTV = findViewById(R.id.suvTV);
         primeTV = findViewById(R.id.primeTV);
+        logout = findViewById(R.id.logout);
+        fab = findViewById(R.id.fab);
+        navigation = findViewById(R.id.navigationIMGV);
         markerPoints = new ArrayList<>();
         final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        navHeader = navigationView.getHeaderView(0);
+        dpTV = (TextView)navHeader.findViewById(R.id.profileTV);
+        String x = PrefUtils.getFromPrefs(this,PrefUtils.user_name,"");
+        String[] myName = x.split(" ");
+        String dp="";
+        for (int i = 0; i < myName.length-1; i++) {
+            String s = myName[i].charAt(0)+"";
+            dp = dp +s;
+        }
+        dpTV.setText(dp);
+        muserName = (TextView) navHeader.findViewById(R.id.usr_name);
+        muserEmail = (TextView) navHeader.findViewById(R.id.usr_email);
+        muserName.setText(PrefUtils.getFromPrefs(this,PrefUtils.user_name,""));
+        muserEmail.setText(PrefUtils.getFromPrefs(this,PrefUtils.user_email,""));
         setListeners();
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mMapView = mapFragment.getView();
@@ -104,17 +127,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
-                // TODO: Get info about the selected place.
-                Log.i("Error", "Place: " + place.getName() + ", " + place.getLatLng()+", "+place.getId());
                 Marker m = mMap.addMarker(new MarkerOptions().position(place.getLatLng()).title(place.getName()));
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(place.getLatLng(), 12.0f));
                 m.showInfoWindow();
             }
             @Override
-            public void onError(Status status) {
-                // TODO: Handle the error.
-                Log.i("Error", "An error occurred: " + status);
-            }
+            public void onError(Status status) {}
         });
     }
     private void setListeners() {
@@ -174,6 +192,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     primeTV.setBackgroundResource(0);
             }
         });
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent in = new Intent(MapsActivity.this,ShowCars.class);
+                startActivity(in);
+            }
+        });
+        logout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PrefUtils.removePrefs(MapsActivity.this);
+                Intent intent  = new Intent(MapsActivity.this,LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+                finish();
+            }
+        });
     }
     @Override
     protected void onResume() {
@@ -195,7 +230,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setOnMapLongClickListener(this);
         View locationButton = ((View) mMapView.findViewById(Integer.parseInt("1")).getParent()).findViewById(Integer.parseInt("2"));
         RelativeLayout.LayoutParams rlp = (RelativeLayout.LayoutParams) locationButton.getLayoutParams();
-        // position on right bottom
         rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, 0);
         rlp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE);
         rlp.setMargins(0, 1200, 180, 0);
@@ -205,46 +239,45 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setMyLocationEnabled(true);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         try {
-            // Customise the styling of the base map using a JSON object defined
-            // in a raw resource file.
             boolean success = googleMap.setMapStyle(
                     MapStyleOptions.loadRawResourceStyle(
                             this, R.raw.style_json));
-
-            if (!success) {
-                Log.e("Error", "Style parsing failed.");
-            }
-        } catch (Resources.NotFoundException e) {
-            Log.e("Error", "Can't find style. Error: ", e);
-        }
+            if (!success) {}
+        } catch (Resources.NotFoundException e) {}
         googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
                 markerPoints.clear();
                 markerPoints.add(new LatLng(ls.mCurrentLocation.getLatitude(),ls.mCurrentLocation.getLongitude()));
                 markerPoints.add(marker.getPosition());
-                LatLng origin = markerPoints.get(0);
-                LatLng dest = markerPoints.get(1);
+                final LatLng origin = markerPoints.get(0);
+                final LatLng dest = markerPoints.get(1);
                 String url = getDirectionsUrl(origin, dest);
                 DownloadTask downloadTask = new DownloadTask();
                 downloadTask.execute(url);
+                navigation.setVisibility(View.VISIBLE);
+                navigation.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
+                                Uri.parse("http://maps.google.com/maps?saddr="+origin.latitude+","+origin.longitude+"&daddr="+dest.latitude+","+dest.longitude));
+                        startActivity(intent);
+                    }
+                });
             return false;
             }
         });
         LatLng car1 = new LatLng(17.424616, 78.438198);
         Marker m = mMap.addMarker(new MarkerOptions().position(car1).title("Car 1").icon(BitmapDescriptorFactory.fromResource(R.drawable.car_icon)));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(car1, 12.0f));
-        m.showInfoWindow();
 
         LatLng car2 = new LatLng(17.3957847, 78.4311944);
         Marker m1 = mMap.addMarker(new MarkerOptions().position(car2).title("Car 2").icon(BitmapDescriptorFactory.fromResource(R.drawable.car_icon)));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(car2, 12.0f));
-        m1.showInfoWindow();
 
         LatLng car3 = new LatLng(17.4504102, 78.38103819999999);
         Marker m2 = mMap.addMarker(new MarkerOptions().position(car3).title("Car 3").icon(BitmapDescriptorFactory.fromResource(R.drawable.car_icon)));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(car3, 12.0f));
-        m2.showInfoWindow();
     }
     @Override
     public void onMapLongClick(LatLng latLng) {
@@ -252,27 +285,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             my.remove();
         my = mMap.addMarker(new MarkerOptions().position(latLng).title(latLng.toString()));
         my.showInfoWindow();
-        // Already two locations
-//        if(markerPoints.size()>1){
-//            markerPoints.clear();
-//            mMap.clear();
-//        }
-//        markerPoints.add(latLng);
-//        MarkerOptions options = new MarkerOptions();
-//        options.position(latLng);
-//        if(markerPoints.size()==1){
-//            options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-//        }else if(markerPoints.size()==2){
-//            options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-//        }
-//        mMap.addMarker(options);
-//        if(markerPoints.size() >= 2){
-//            LatLng origin = markerPoints.get(0);
-//            LatLng dest = markerPoints.get(1);
-//            String url = getDirectionsUrl(origin, dest);
-//            DownloadTask downloadTask = new DownloadTask();
-//            downloadTask.execute(url);
-//        }
     }
     private BroadcastReceiver mGpsSwitchStateReceiver = new BroadcastReceiver() {
         @Override
@@ -303,8 +315,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
     @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-        return false;
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.up_trips) {
+            Intent trip_intent = new Intent(this,YourTrips.class);
+            startActivity(trip_intent);
+        }
+        else if (id == R.id.past_trips) {
+            Intent trip_intent = new Intent(this,PastTrips.class);
+            startActivity(trip_intent);
+        }
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
     }
     private String getDirectionsUrl(LatLng origin,LatLng dest){
         String str_origin = "origin="+origin.latitude+","+origin.longitude;
@@ -375,11 +399,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         protected void onPostExecute(List<List<HashMap<String, String>>> result) {
             ArrayList<LatLng> points = null;
-            PolylineOptions lineOptions = null;
-            MarkerOptions markerOptions = new MarkerOptions();
+            lineOptions = new PolylineOptions();
             for(int i=0;i<result.size();i++){
                 points = new ArrayList<LatLng>();
-                lineOptions = new PolylineOptions();
                 List<HashMap<String, String>> path = result.get(i);
                 for(int j=0;j<path.size();j++){
                     HashMap<String,String> point = path.get(j);

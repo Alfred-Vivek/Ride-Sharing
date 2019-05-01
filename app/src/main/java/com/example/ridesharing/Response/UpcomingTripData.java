@@ -15,6 +15,16 @@ public class UpcomingTripData {
     String tripStatus;
     @SerializedName("userName")
     String userName;
+    @SerializedName("finishedTime")
+    String finishedTime;
+
+    public String getFinishedTime() {
+        return finishedTime;
+    }
+
+    public void setFinishedTime(String finishedTime) {
+        this.finishedTime = finishedTime;
+    }
 
     public String getTripID() {
         return tripID;

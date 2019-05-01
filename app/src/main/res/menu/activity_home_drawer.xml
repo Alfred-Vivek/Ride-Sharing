@@ -5,11 +5,11 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/up_trips"
-            android:icon="@drawable/ic_menu_camera"
+            android:icon="@drawable/ic_upcoming"
             android:title="@string/upcomg_trips" />
         <item
             android:id="@+id/past_trips"
-            android:icon="@drawable/ic_menu_gallery"
+            android:icon="@drawable/ic_past"
             android:title="@string/past_trips" />
     </group>
 </menu>
