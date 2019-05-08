@@ -139,8 +139,8 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.ImageViewHolde
     }
     private void CallEndTripApi(final int i, final String status) {
         final String tripStatus;
-        if(status.equalsIgnoreCase("finished"))tripStatus = "Finished";
-        else tripStatus = "Cancelled";
+        if(status.equalsIgnoreCase("finished"))tripStatus = "Trip Ended Successfully. Thank You for Riding with us!";
+        else tripStatus = "Trip Cancelled Successfully. Ride with us again!";
         String user_name = PrefUtils.getFromPrefs(mContext,PrefUtils.user_email,"");
         final String mcaddress = PrefUtils.getFromPrefs(mContext,PrefUtils.mc_address,"");
         EndTripRequest EndRequest = new EndTripRequest();

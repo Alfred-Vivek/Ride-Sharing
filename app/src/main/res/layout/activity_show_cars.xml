@@ -6,15 +6,80 @@
     android:layout_height="match_parent"
     android:background="#5CE9E7E7"
     tools:context=".Activity.ShowCars">
-    <!--<ProgressBar-->
-        <!--android:id="@+id/progressbar_car_display"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_centerInParent="true"/>-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:orientation="horizontal"
+        android:layout_marginTop="10dp"
+        android:padding="10dp"
+        android:weightSum="2">
+        <android.support.v7.widget.CardView
+            android:id="@+id/pick"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:background="#FFFFFF"
+            android:elevation="20dp"
+            android:padding="10dp"
+            app:cardCornerRadius="5dp"
+            android:layout_weight="1">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="Pick Up"
+                    android:gravity="center"
+                    android:textColor="#000000" />
+                <TextView
+                    android:id="@+id/dateTime1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="--:--:--"
+                    android:gravity="center"
+                    android:textColor="#000000" />
+            </LinearLayout>
+        </android.support.v7.widget.CardView>
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginLeft="2dp"
+                android:layout_marginRight="2dp"
+                android:src="@drawable/ic_arrow"/>
+        <android.support.v7.widget.CardView
+            android:id="@+id/drop"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:background="#FFFFFF"
+            android:elevation="20dp"
+            android:padding="10dp"
+            app:cardCornerRadius="5dp"
+            android:layout_weight="1">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="Drop Off"
+                    android:gravity="center"
+                    android:textColor="#000000" />
+                <TextView
+                    android:id="@+id/dateTime2"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:text="--:--:--"
+                    android:gravity="center"
+                    android:textColor="#000000" />
+            </LinearLayout>
+        </android.support.v7.widget.CardView>
+    </LinearLayout>
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycleView_cars"
+        android:layout_marginTop="60dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
     </android.support.v7.widget.RecyclerView>
 </RelativeLayout>

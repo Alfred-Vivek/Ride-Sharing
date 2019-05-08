@@ -1,5 +1,7 @@
 package com.example.ridesharing.Activity;
+
 import android.Manifest;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,60 +12,50 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.location.LocationManager;
 import android.net.Uri;
-import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
-import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.example.ridesharing.Fragment.DatePickerFragment;
-import com.example.ridesharing.Fragment.TimePickerFragment;
 import com.example.ridesharing.R;
-import com.example.ridesharing.Request.RouteRequest;
 import com.example.ridesharing.Response.MapResponse.Result;
 import com.example.ridesharing.Rest.ApiClient;
 import com.example.ridesharing.Rest.ApiInterface;
 import com.example.ridesharing.Utils.PrefUtils;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.SquareCap;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
-import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
-import com.google.gson.Gson;
 
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -73,7 +65,9 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,GoogleMap.OnMapLongClickListener, NavigationView.OnNavigationItemSelectedListener {
+import static com.google.android.gms.maps.model.JointType.ROUND;
+
+public class MapsActivityBck extends AppCompatActivity implements OnMapReadyCallback,GoogleMap.OnMapLongClickListener, NavigationView.OnNavigationItemSelectedListener {
     private GoogleMap mMap;
     private View mMapView;
     TextView miniTV, sedanTV, suvTV, primeTV, dpTV,muserEmail,muserName,logout;
@@ -83,6 +77,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private View navHeader;
     FloatingActionButton fab;
     ArrayList<LatLng> markerPoints;
+    private PolylineOptions polylineOptions, blackPolylineOptions;
+    private Polyline blackPolyline, greyPolyLine;
+    private LatLng startPosition, endPosition;
+    private float v;
+    private double lat, lng;
+    private Marker marker;
+    private Handler handler;
+    private int index, next;
     PolylineOptions lineOptions;
     Polyline line;
     ApiInterface apiServices;
@@ -210,15 +212,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent in = new Intent(MapsActivity.this,ShowCars.class);
+                Intent in = new Intent(MapsActivityBck.this,ShowCars.class);
                 startActivity(in);
             }
         });
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PrefUtils.removePrefs(MapsActivity.this);
-                Intent intent  = new Intent(MapsActivity.this,LoginActivity.class);
+                PrefUtils.removePrefs(MapsActivityBck.this);
+                Intent intent  = new Intent(MapsActivityBck.this,LoginActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
                 finish();
@@ -293,7 +295,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 navigation.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent intent = new Intent(android.content.Intent.ACTION_VIEW,
+                        Intent intent = new Intent(Intent.ACTION_VIEW,
                                 Uri.parse("http://maps.google.com/maps?saddr="+origin.latitude+","+origin.longitude+"&daddr="+dest.latitude+","+dest.longitude));
                         startActivity(intent);
                     }
@@ -367,7 +369,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         {
                             DirectionsHandler dh = new DirectionsHandler();
                             msg = response.body().getRoutes().get(i).getLegs().get(j).getSteps().get(k).getHtmlInstructions();
-                            List<LatLng> list = dh.decodePoly(response.body().getRoutes().get(i).getLegs().get(j).getSteps().get(k).getPolyline().getPoints());
+                            List<LatLng> list = dh.decodePoly(response.body().getRoutes().get(i).getOverviewPolyline().getPoints());
+                            drawPolyLineAndAnimateCar(list);
                             for(int l=0;l<list.size();l++){
                                 HashMap<String, String> hm = new HashMap<String, String>();
                                 hm.put("lat", Double.toString(((LatLng)list.get(l)).latitude) );
@@ -378,25 +381,29 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         routes.add(path);
                     }
                 }
-                ArrayList<LatLng> points = null;
-            lineOptions = new PolylineOptions();
-            for(int i=0;i<routes.size();i++){
-                points = new ArrayList<LatLng>();
-                List<HashMap<String, String>> path = routes.get(i);
-                for(int j=0;j<path.size();j++){
-                    HashMap<String,String> point = path.get(j);
-                    double lat = Double.parseDouble(point.get("lat"));
-                    double lng = Double.parseDouble(point.get("lng"));
-                    LatLng position = new LatLng(lat, lng);
-                    points.add(position);
-                }
-                lineOptions.addAll(points);
-            }
-            line = mMap.addPolyline(lineOptions);
+//                ArrayList<LatLng> points = null;
+//            lineOptions = new PolylineOptions();
+//            for(int i=0;i<routes.size();i++){
+//                points = new ArrayList<LatLng>();
+//                List<HashMap<String, String>> path = routes.get(i);
+//                for(int j=0;j<path.size();j++){
+//                    HashMap<String,String> point = path.get(j);
+//                    double lat = Double.parseDouble(point.get("lat"));
+//                    double lng = Double.parseDouble(point.get("lng"));
+//                    LatLng position = new LatLng(lat, lng);
+//                    points.add(position);
+//                }
+//                lineOptions.addAll(points);
+////                for(int k=0; k< result.getMessage().size(); k++)
+////                    Log.d("Navigate", result.getMessage().get(k));
+//            }
+//            line = mMap.addPolyline(lineOptions);
 
             }
             @Override
-            public void onFailure(Call<Result> call, Throwable t) {}
+            public void onFailure(Call<Result> call, Throwable t) {
+
+            }
         });
     }
     private BroadcastReceiver mGpsSwitchStateReceiver = new BroadcastReceiver() {
@@ -408,4 +415,92 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     };
+    private void drawPolyLineAndAnimateCar(final List<LatLng> polyLineList) {
+        //Adjusting bounds
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        for (LatLng latLng : polyLineList) {
+            builder.include(latLng);
+        }
+        LatLngBounds bounds = builder.build();
+        CameraUpdate mCameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, 2);
+        mMap.animateCamera(mCameraUpdate);
+
+        polylineOptions = new PolylineOptions();
+        polylineOptions.color(Color.GRAY);
+        polylineOptions.width(5);
+        polylineOptions.startCap(new SquareCap());
+        polylineOptions.endCap(new SquareCap());
+        polylineOptions.jointType(ROUND);
+        polylineOptions.addAll(polyLineList);
+        greyPolyLine = mMap.addPolyline(polylineOptions);
+
+        blackPolylineOptions = new PolylineOptions();
+        blackPolylineOptions.width(5);
+        blackPolylineOptions.color(Color.BLACK);
+        blackPolylineOptions.startCap(new SquareCap());
+        blackPolylineOptions.endCap(new SquareCap());
+        blackPolyline = mMap.addPolyline(blackPolylineOptions);
+//        mMap.addMarker(new MarkerOptions()
+//                .position(polyLineList.get(polyLineList.size() - 1)));
+        ValueAnimator polylineAnimator = ValueAnimator.ofInt(0, 100);
+        polylineAnimator.setDuration(3000);
+        polylineAnimator.setInterpolator(new LinearInterpolator());
+        polylineAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                List<LatLng> points = greyPolyLine.getPoints();
+                int percentValue = (int) valueAnimator.getAnimatedValue();
+                int size = points.size();
+                int newPoints = (int) (size * (percentValue / 100.0f));
+                List<LatLng> p = points.subList(0, newPoints);
+                blackPolyline.setPoints(p);
+            }
+        });
+        polylineAnimator.start();
+        marker = mMap.addMarker(new MarkerOptions().position(new LatLng(17.425016, 78.438751)));
+
+        handler = new Handler();
+        index = -1;
+        next = 1;
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ValueAnimator valueAnimator = ValueAnimator.ofFloat(0, 1);
+                valueAnimator.setDuration(3000);
+                valueAnimator.setInterpolator(new LinearInterpolator());
+                valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                    @Override
+                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                        LatLng newPos = new LatLng(ls.mCurrentLocation.getLatitude(), ls.mCurrentLocation.getLongitude());
+                        marker.setPosition(newPos);
+                        marker.setAnchor(0.5f, 0.5f);
+                        marker.setRotation(getBearing(startPosition, newPos));
+                        marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.ic_car_marker));
+                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition
+                                (new CameraPosition.Builder().target(newPos)
+                                        .zoom(15.5f).build()));
+                        startPosition = newPos;
+                    }
+                });
+                valueAnimator.start();
+                if (index != polyLineList.size() - 1) {
+                    handler.postDelayed(this, 3000);
+                }
+            }
+        }, 3000);
+    }
+    private float getBearing(LatLng begin, LatLng end) {
+        double lat = Math.abs(begin.latitude - end.latitude);
+        double lng = Math.abs(begin.longitude - end.longitude);
+
+        if (begin.latitude < end.latitude && begin.longitude < end.longitude)
+            return (float) (Math.toDegrees(Math.atan(lng / lat)));
+        else if (begin.latitude >= end.latitude && begin.longitude < end.longitude)
+            return (float) ((90 - Math.toDegrees(Math.atan(lng / lat))) + 90);
+        else if (begin.latitude >= end.latitude && begin.longitude >= end.longitude)
+            return (float) (Math.toDegrees(Math.atan(lng / lat)) + 180);
+        else if (begin.latitude < end.latitude && begin.longitude >= end.longitude)
+            return (float) ((90 - Math.toDegrees(Math.atan(lng / lat))) + 270);
+        return -1;
+    }
 }

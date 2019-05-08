@@ -3,6 +3,7 @@ package com.example.ridesharing.Rest;
 import com.example.ridesharing.Response.BookResponse;
 import com.example.ridesharing.Response.EndTripResponse;
 import com.example.ridesharing.Response.LoginResponse;
+import com.example.ridesharing.Response.MapResponse.Result;
 import com.example.ridesharing.Response.UnlockResponse;
 import com.example.ridesharing.Response.UpcomingTripResponse;
 import com.example.ridesharing.Response.carResponse;
@@ -15,8 +16,9 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Query;
+import retrofit2.http.Url;
 
-    public interface ApiInterface {
+public interface ApiInterface {
 //        @FormUrlEncoded
         @POST("/book")
         Call<BookResponse> sendBookRequest(@Body Map<String, String> request);
@@ -32,6 +34,9 @@ import retrofit2.http.Query;
 
         @GET("/userslist?flag=carData&type=vehicle&status=open")
         Call<carResponse> getPackage();
+
+        @GET
+        Call<Result> getDirections(@Url String url);
 
         @PUT("/endtrip")
         Call<EndTripResponse> sendTripRequest(@Body Map<String, String> request);

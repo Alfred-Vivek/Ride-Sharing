@@ -1,13 +1,16 @@
 package com.example.ridesharing.Activity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
-
+import android.view.View;
+import android.widget.TextView;
+import com.example.ridesharing.Fragment.DatePickerFragment;
 import com.example.ridesharing.Pojo.Car;
 import com.example.ridesharing.Adapter.CarAdapter;
 import com.example.ridesharing.R;
@@ -15,10 +18,8 @@ import com.example.ridesharing.Rest.ApiClient;
 import com.example.ridesharing.Rest.ApiInterface;
 import com.example.ridesharing.Response.carData;
 import com.example.ridesharing.Response.carResponse;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -28,7 +29,8 @@ public class ShowCars extends AppCompatActivity {
     List<Car> carList;
     ApiInterface apiInterface;
     private RecyclerView mCarRecyclerView;
-    public String from,to;
+    public static TextView pickTV,dropTV;
+    public CardView pickup,dropoff;
     ProgressDialog progressDialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,11 +39,24 @@ public class ShowCars extends AppCompatActivity {
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage("Loading...");
         progressDialog.setCancelable(false);
-        Bundle mbundle = getIntent().getExtras();
-        if(mbundle!=null){
-            from = mbundle.getString("from");
-            to = mbundle.getString("to");
-        }
+        pickup = findViewById(R.id.pick);
+        dropoff = findViewById(R.id.drop);
+        pickTV = findViewById(R.id.dateTime1);
+        dropTV = findViewById(R.id.dateTime2);
+        pickup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DialogFragment newFragment = new DatePickerFragment(1);
+                newFragment.show(getSupportFragmentManager(), "datePicker");
+            }
+        });
+        dropoff.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DialogFragment newFragment = new DatePickerFragment(2);
+                newFragment.show(getSupportFragmentManager(), "datePicker");
+            }
+        });
         loadCarApi();
     }
     public void loadCarApi() {
@@ -89,7 +104,7 @@ public class ShowCars extends AppCompatActivity {
             Car car = new Car(car_list.get(i).getVin(),car_list.get(i).getCompany(),car_list.get(i).getBrand(),car_list.get(i).getSeatingCapacity(),car_list.get(i).getCarImage(),car_list.get(i).getRate50(),car_list.get(i).getRate100(),car_list.get(i).getMcAddress(),car_list.get(i).getOwnerName(),car_list.get(i).getRcImage(),car_list.get(i).getCurrentStatus());
             carList.add(car);
         }
-        RecyclerView.Adapter adapter = new CarAdapter(this,from,to,carList);
+        RecyclerView.Adapter adapter = new CarAdapter(this,carList);
         mCarRecyclerView.setAdapter(adapter);
     }
 }
